@@ -39,7 +39,7 @@ module {
         email : Text;
         verified : Bool;
         contact : Text;
-        endDate: Int;
+        endDate : ?Int;
     };
 
     public type Event = {
@@ -50,7 +50,7 @@ module {
         prizePool : Int;
         timestamp : Int;
         coverUrl : Text;
-        endDate : Int;
+        endDate : ?Int;
     };
 
     public type News = {
@@ -60,7 +60,7 @@ module {
         coverUrl : Text;
         userId : userId;
         viewCount : Int;
-        endDate : Int;
+        endDate : ?Int;
     };
 
     public type Banner = {
