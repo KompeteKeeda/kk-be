@@ -39,6 +39,7 @@ module {
         email : Text;
         verified : Bool;
         contact : Text;
+        endDate : ?Int;
     };
 
     public type Event = {
@@ -49,7 +50,7 @@ module {
         prizePool : Int;
         timestamp : Int;
         coverUrl : Text;
-        endDate : Int;
+        endDate : ?Int;
     };
 
     public type News = {
@@ -59,7 +60,7 @@ module {
         coverUrl : Text;
         userId : userId;
         viewCount : Int;
-        endDate : Int;
+        endDate : ?Int;
     };
 
     public type Banner = {
@@ -67,4 +68,21 @@ module {
         redirectUrl : Text;
         endDate : Text;
     };
-}
+
+    // HTTP Request Interface
+    public type headerField = (Text, Text);
+
+    public type HttpRequest = {
+        body : Blob;
+        headers : [headerField];
+        method : Text;
+        url : Text;
+    };
+
+    public type HttpResponse = {
+        body : Blob;
+        headers : [headerField];
+        status_code : Nat16;
+    };
+
+};
