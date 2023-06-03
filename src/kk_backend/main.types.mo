@@ -39,6 +39,7 @@ module {
         email : Text;
         verified : Bool;
         contact : Text;
+        endDate: Int;
     };
 
     public type Event = {
