@@ -26,6 +26,7 @@ import Trie2D "mo:base/Trie";
 
 import Types "main.types";
 import Helper "utils/Helper";
+import Constants "utils/Constants";
 
 actor Main {
   // containers
@@ -118,6 +119,7 @@ actor Main {
   };
 
   // HTTP request handler
+  // TODO:
   public query func http_request(req : Types.HttpRequest) : async (Types.HttpResponse) {
     let path = Iter.toArray(Text.tokens(req.url, #text("/")));
     switch (req.method) {
@@ -157,6 +159,4 @@ actor Main {
     };
   };
 
-  // Admin eps
-  
 };
