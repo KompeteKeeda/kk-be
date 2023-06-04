@@ -16,3 +16,6 @@ src/declarations/
 # frontend code
 node_modules/
 dist/
+
+#Constants
+src/kk_backend/utils/Constants
