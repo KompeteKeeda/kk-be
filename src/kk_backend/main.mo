@@ -37,9 +37,16 @@ actor Main {
   private stable var _admins : [Types.userId] = [];
   private stable var _tags : Trie.Trie<Types.tagId, Types.Tag> = Trie.empty();
 
+  private stable var newsId : Nat = 0; 
+  private stable var eventId : Nat = 0;
+  private stable var bannerId : Nat = 0;
+  private stable var tagId : Nat = 0;
+
   // CRUD News
-  public shared({caller}) func createNews(id : Types.newsId, news : Types.News) : async (Types.News) {
+  public shared({caller}) func createNews(news : Types.News) : async (Types.News) {
+    let id = Nat.toText(newsId);
     _news := Trie.put(_news, Helper.keyT(id), Text.equal, news).0;
+    newsId := newsId + 1;
     return news;
   };
   public shared({caller}) func updateNews(id : Types.newsId, news : Types.News) : async (Result.Result<Types.News, Text>) {
@@ -63,15 +70,36 @@ actor Main {
       };
     };
   };
+  public query func readAllNews(offset : Nat, limit : Nat) : async ([Types.News]) {
+    var b : Buffer.Buffer<Types.News> = Buffer.Buffer<Types.News>(0);
+    for((ind, news) in Trie.iter(_news)) {
+        b.add(news);
+    };
+    var start : Nat = offset;
+    var end : Nat = offset + limit;
+    let size : Nat = Trie.size(_news);
+    if(size > end){
+        end := size;
+    };
+    let news_arr : [Types.News] = Buffer.toArray(b);
+    b := Buffer.Buffer<Types.News>(0);
+    while(start < end) {
+        b.add(news_arr[start]);
+        start := start + 1;
+    };
+    return Buffer.toArray(b);
+  };
 
   // CRUD Banners
-  public  shared ({caller}) func createBanner(id : Types.bannerId, banner : Types.Banner) : async (Types.Banner) {
+  public  shared ({caller}) func createBanner(banner : Types.Banner) : async (Types.Banner) {
+    let id : Text = Nat.toText(bannerId);
     _banners := Trie.put(_banners, Helper.keyT(id), Text.equal, banner).0;
+    bannerId := bannerId + 1;
     return banner;
   };
   public shared ({caller}) func updateBanner(id : Types.bannerId, banner : Types.Banner) : async (Result.Result<Types.Banner, Text>) {
-    switch (Trie.find(_news, Helper.keyT(id), Text.equal)) {
-      case (?n) {
+    switch (Trie.find(_banners, Helper.keyT(id), Text.equal)) {
+      case (?b) {
         _banners := Trie.put(_banners, Helper.keyT(id), Text.equal, banner).0;
         return #ok(banner);
       };
@@ -87,6 +115,54 @@ actor Main {
       };
       case _ {
         #err("banner not found");
+      };
+    };
+  };
+  public query func readAllBanners(offset : Nat, limit : Nat) : async ([Types.Banner]) {
+    var b : Buffer.Buffer<Types.Banner> = Buffer.Buffer<Types.Banner>(0);
+    for((ind, banner) in Trie.iter(_banners)) {
+        b.add(banner);
+    };
+    var start : Nat = offset;
+    var end : Nat = offset + limit;
+    let size : Nat = Trie.size(_banners);
+    if(size > end){
+        end := size;
+    };
+    let banners_arr : [Types.Banner] = Buffer.toArray(b);
+    b := Buffer.Buffer<Types.Banner>(0);
+    while(start < end) {
+        b.add(banners_arr[start]);
+        start := start + 1;
+    };
+    return Buffer.toArray(b);
+  };
+
+  // CRUD Events
+  public  shared ({caller}) func createEvent(event : Types.Event) : async (Types.Event) {
+    let id : Text = Nat.toText(eventId);
+    _events := Trie.put(_events, Helper.keyT(id), Text.equal, event).0;
+    eventId := eventId + 1;
+    return event;
+  };
+  public shared ({caller}) func updateEvent(id : Types.eventId, event : Types.Event) : async (Result.Result<Types.Event, Text>) {
+    switch (Trie.find(_events, Helper.keyT(id), Text.equal)) {
+      case (?e) {
+        _events := Trie.put(_events, Helper.keyT(id), Text.equal, event).0;
+        return #ok(event);
+      };
+      case _ {
+        return #err("event not exist");
+      };
+    };
+  };
+  public query func readEvent(id : Types.eventId) : async (Result.Result<Types.Event, Text>) { 
+    switch (Trie.find(_events, Helper.keyT(id), Text.equal)) {
+      case (?e) {
+        return #ok(e);
+      };
+      case _ {
+        #err("event not found");
       };
     };
   };
@@ -116,6 +192,15 @@ actor Main {
         return #err("user not found");
       };
     };
+  };
+
+  //read all tags
+  public query func readAllTags() : async ([Types.Tag]) {
+    let buffer = Buffer.Buffer<Types.Tag>(0);
+    for ((x, y) in Trie.iter(_tags)) {
+      buffer.add(y);
+    };
+    return Buffer.toArray(buffer);
   };
 
   // HTTP request handler
@@ -158,5 +243,4 @@ actor Main {
       };
     };
   };
-
-};
+}
