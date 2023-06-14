@@ -68,4 +68,21 @@ module {
         redirectUrl : Text;
         endDate : Text;
     };
-}
+
+    // HTTP Request Interface
+    public type headerField = (Text, Text);
+
+    public type HttpRequest = {
+        body : Blob;
+        headers : [headerField];
+        method : Text;
+        url : Text;
+    };
+
+    public type HttpResponse = {
+        body : Blob;
+        headers : [headerField];
+        status_code : Nat16;
+    };
+
+};
