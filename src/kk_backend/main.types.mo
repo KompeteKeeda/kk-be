@@ -30,10 +30,10 @@ module {
     public type tagId = Text;
     public type bannerId = Text;
 
-    public type Tag = Text;
     public type Admins = [Text];
 
     public type User = {
+        id : Text;
         name : Text;
         userName : Text;
         email : Text;
@@ -43,6 +43,7 @@ module {
     };
 
     public type Event = {
+        id : Text;
         title : Text;
         description : Text;
         host : Text;
@@ -54,6 +55,7 @@ module {
     };
 
     public type News = {
+        id : Text;
         title : Text;
         content : Text;
         tags : [tagId];
@@ -64,9 +66,15 @@ module {
     };
 
     public type Banner = {
+        id : Text;
         url : Text;
         redirectUrl : Text;
         endDate : Text;
+    };
+
+    public type Tag = {
+        id : Text;
+        news : [newsId];
     };
 
     // HTTP Request Interface

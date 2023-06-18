@@ -27,6 +27,7 @@ import Trie2D "mo:base/Trie";
 import Types "main.types";
 import Helper "utils/Helper";
 import Constants "utils/Constants";
+import Internals "utils/Internals";
 
 actor Main {
   // containers
@@ -34,20 +35,24 @@ actor Main {
   private stable var _banners : Trie.Trie<Types.bannerId, Types.Banner> = Trie.empty();
   private stable var _users : Trie.Trie<Types.userId, Types.User> = Trie.empty();
   private stable var _events : Trie.Trie<Types.eventId, Types.Event> = Trie.empty();
-  private stable var _admins : [Types.userId] = [];
   private stable var _tags : Trie.Trie<Types.tagId, Types.Tag> = Trie.empty();
-
   private stable var newsId : Nat = 0; 
   private stable var eventId : Nat = 0;
   private stable var bannerId : Nat = 0;
-  private stable var tagId : Nat = 0;
 
   // CRUD News
-  public shared({caller}) func createNews(news : Types.News) : async (Types.News) {
+  public shared({caller}) func createNews(news : Types.News) : async (Result.Result<Types.News, Text>) {
+    //check for tags
+    for(tagId in (news.tags).vals()) {
+      if(Internals.isTagAvailable_(_tags, tagId) == false){
+        return #err(tagId #" tag id not found");
+      };
+    };
     let id = Nat.toText(newsId);
     _news := Trie.put(_news, Helper.keyT(id), Text.equal, news).0;
+    _tags := Internals.addNewsIdToTags_(_tags, news.tags, id);
     newsId := newsId + 1;
-    return news;
+    return #ok(news);
   };
   public shared({caller}) func updateNews(id : Types.newsId, news : Types.News) : async (Result.Result<Types.News, Text>) {
     switch (Trie.find(_news, Helper.keyT(id), Text.equal)) {
@@ -78,7 +83,7 @@ actor Main {
     var start : Nat = offset;
     var end : Nat = offset + limit;
     let size : Nat = Trie.size(_news);
-    if(size > end){
+    if(size < end){
         end := size;
     };
     let news_arr : [Types.News] = Buffer.toArray(b);
@@ -126,7 +131,7 @@ actor Main {
     var start : Nat = offset;
     var end : Nat = offset + limit;
     let size : Nat = Trie.size(_banners);
-    if(size > end){
+    if(size < end){
         end := size;
     };
     let banners_arr : [Types.Banner] = Buffer.toArray(b);
@@ -195,14 +200,47 @@ actor Main {
   };
 
   //read all tags
-  public query func readAllTags() : async ([Types.Tag]) {
-    let buffer = Buffer.Buffer<Types.Tag>(0);
-    for ((x, y) in Trie.iter(_tags)) {
-      buffer.add(y);
+  public query func readAllTagNews(tagId : Types.tagId, offset : Nat, limit : Nat) : async ([Types.News]) {
+    var b : Buffer.Buffer<Types.News> = Buffer.Buffer<Types.News>(0);
+    switch (Trie.find(_tags, Helper.keyT(tagId), Text.equal)) {
+      case (?n){
+        var all_news_ids : [Types.newsId] = n.news;
+        for(i in all_news_ids.vals()) {
+          switch (Trie.find(_news, Helper.keyT(i), Text.equal)) {
+            case (?news){
+              b.add(news);
+            };
+            case _ {};
+          };
+        };
+      };
+      case _ {
+        return [];
+      };
     };
-    return Buffer.toArray(buffer);
+    var start : Nat = offset;
+    var end : Nat = offset + limit;
+    let size : Nat = b.size();
+    if(size < end){
+        end := size;
+    };
+    let news_arr : [Types.News] = Buffer.toArray(b);
+    b := Buffer.Buffer<Types.News>(0);
+    while(start < end) {
+        b.add(news_arr[start]);
+        start := start + 1;
+    };
+    return Buffer.toArray(b);
   };
 
+  public query func readAllTags() : async ([Types.tagId]) {
+    var b : Buffer.Buffer<Types.tagId> = Buffer.Buffer<Types.tagId>(0);
+    for((i, v) in Trie.iter(_tags)) {
+      b.add(i);
+    };
+    return Buffer.toArray(b);
+  };
+ 
   // HTTP request handler
   // TODO:
   public query func http_request(req : Types.HttpRequest) : async (Types.HttpResponse) {
