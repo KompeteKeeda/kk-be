@@ -36,13 +36,6 @@ actor Main {
   private stable var _users : Trie.Trie<Types.userId, Types.User> = Trie.empty();
   private stable var _events : Trie.Trie<Types.eventId, Types.Event> = Trie.empty();
   private stable var _tags : Trie.Trie<Types.tagId, Types.Tag> = Trie.empty();
-
-  private stable var news : Trie.Trie<Types.newsId, Types.News> = Trie.empty();
-  private stable var banners : Trie.Trie<Types.bannerId, Types.Banner> = Trie.empty();
-  private stable var users : Trie.Trie<Types.userId, Types.User> = Trie.empty();
-  private stable var events : Trie.Trie<Types.eventId, Types.Event> = Trie.empty();
-  private stable var tags : Trie.Trie<Types.tagId, Types.Tag> = Trie.empty();
-
   private stable var newsId : Nat = 0; 
   private stable var eventId : Nat = 0;
   private stable var bannerId : Nat = 0;
@@ -50,9 +43,9 @@ actor Main {
   // CRUD News
   public shared({caller}) func createNews(news : Types.News) : async (Result.Result<Types.News, Text>) {
     //check for tags
-    for(i in (news.tags).vals()) {
-      if(Internals.isTagAvailable_(_tags, i) == false){
-        return #err(i #" tag id not found");
+    for(tagId in (news.tags).vals()) {
+      if(Internals.isTagAvailable_(_tags, tagId) == false){
+        return #err(tagId #" tag id not found");
       };
     };
     let id = Nat.toText(newsId);
@@ -221,7 +214,9 @@ actor Main {
           };
         };
       };
-      case _ {};
+      case _ {
+        return [];
+      };
     };
     var start : Nat = offset;
     var end : Nat = offset + limit;
