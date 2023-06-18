@@ -35,7 +35,13 @@ actor Main {
   private stable var _banners : Trie.Trie<Types.bannerId, Types.Banner> = Trie.empty();
   private stable var _users : Trie.Trie<Types.userId, Types.User> = Trie.empty();
   private stable var _events : Trie.Trie<Types.eventId, Types.Event> = Trie.empty();
-  private stable var _tags : Trie.Trie<Types.tagId, [Types.newsId]> = Trie.empty();
+  private stable var _tags : Trie.Trie<Types.tagId, Types.Tag> = Trie.empty();
+
+  private stable var news : Trie.Trie<Types.newsId, Types.News> = Trie.empty();
+  private stable var banners : Trie.Trie<Types.bannerId, Types.Banner> = Trie.empty();
+  private stable var users : Trie.Trie<Types.userId, Types.User> = Trie.empty();
+  private stable var events : Trie.Trie<Types.eventId, Types.Event> = Trie.empty();
+  private stable var tags : Trie.Trie<Types.tagId, Types.Tag> = Trie.empty();
 
   private stable var newsId : Nat = 0; 
   private stable var eventId : Nat = 0;
@@ -205,7 +211,7 @@ actor Main {
     var b : Buffer.Buffer<Types.News> = Buffer.Buffer<Types.News>(0);
     switch (Trie.find(_tags, Helper.keyT(tagId), Text.equal)) {
       case (?n){
-        var all_news_ids : [Types.newsId] = n;
+        var all_news_ids : [Types.newsId] = n.news;
         for(i in all_news_ids.vals()) {
           switch (Trie.find(_news, Helper.keyT(i), Text.equal)) {
             case (?news){

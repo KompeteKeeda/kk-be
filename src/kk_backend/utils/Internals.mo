@@ -29,7 +29,7 @@ import Helper "Helper";
 import Constants "Constants";
 
 module {
-    public func isTagAvailable_(_tags : Trie.Trie<Types.tagId, [Types.newsId]>, tag : Types.tagId) : Bool {
+    public func isTagAvailable_(_tags : Trie.Trie<Types.tagId, Types.Tag>, tag : Types.tagId) : Bool {
         switch (Trie.find(_tags, Helper.keyT(tag), Text.equal)) {
             case (?is) {
                 return true;
@@ -40,14 +40,17 @@ module {
         };
     };
 
-    public func addNewsIdToTags_(_tags : Trie.Trie<Types.tagId, [Types.newsId]>, tagIds : [Types.tagId], newsId : Types.newsId) : (Trie.Trie<Types.tagId, [Types.newsId]>) {
+    public func addNewsIdToTags_(_tags : Trie.Trie<Types.tagId, Types.Tag>, tagIds : [Types.tagId], newsId : Types.newsId) : (Trie.Trie<Types.tagId, Types.Tag>) {
         var tags = _tags;
         for (tagId in tagIds.vals()) {
             switch (Trie.find(_tags, Helper.keyT(tagId), Text.equal)) {
                 case (?t) {
-                    var b : Buffer.Buffer<Types.newsId> = Buffer.fromArray(t);
+                    var b : Buffer.Buffer<Types.newsId> = Buffer.fromArray(t.news);
                     b.add(newsId);
-                    tags := Trie.put(tags, Helper.keyT(tagId), Text.equal, Buffer.toArray(b)).0;
+                    tags := Trie.put(tags, Helper.keyT(tagId), Text.equal, {
+                        id = tagId;
+                        news = Buffer.toArray(b);
+                    }).0;
                 };
                 case _ {
                     return _tags;
