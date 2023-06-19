@@ -22,6 +22,9 @@ import Text "mo:base/Text";
 import Time "mo:base/Time";
 import Trie "mo:base/Trie";
 import Trie2D "mo:base/Trie";
+import Constants "Constants";
+import Array "mo:base/Array";
+
 
 module {
     public func key(x : Nat32) : Trie.Key<Nat32> {
@@ -45,4 +48,12 @@ module {
 
         return num;
     };
+
+    public func isAdmin(principalId: Principal): Bool {
+        let adminId = Array.find<Text>(Constants.admins, func adminId = (adminId == Principal.toText(principalId)));
+        if (adminId != null) {
+            return true;
+        };
+        return false;
+    }
 }
