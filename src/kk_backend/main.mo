@@ -192,7 +192,26 @@ actor Main {
       };
     };
   };
-  public query func readEvent(id : Types.eventId) : async (Result.Result<Types.Event, Text>) {
+  public query func readAllEvents(offset : Nat, limit : Nat) : async ([Types.Event]) {
+    var bufferEvents : Buffer.Buffer<Types.Event> = Buffer.Buffer<Types.Event>(0);
+    for((ind, event) in Trie.iter(_events)) {
+        bufferEvents.add(event);
+    };
+    var start : Nat = offset;
+    var end : Nat = offset + limit;
+    let size : Nat = Trie.size(_events);
+    if(size < end){
+        end := size;
+    };
+    let events_arr : [Types.Event] = Buffer.toArray(bufferEvents);
+    bufferEvents := Buffer.Buffer<Types.Event>(0);
+    while(start < end) {
+        bufferEvents.add(events_arr[start]);
+        start := start + 1;
+    };
+    return Buffer.toArray(bufferEvents);
+  };
+  public query func readEvent(id : Types.eventId) : async (Result.Result<Types.Event, Text>) { 
     switch (Trie.find(_events, Helper.keyT(id), Text.equal)) {
       case (?e) {
         return #ok(e);
