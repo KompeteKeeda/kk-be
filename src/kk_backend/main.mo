@@ -290,13 +290,7 @@ actor Main {
       case ("GET") {
         if (Text.contains(req.url, #text "/subscribed-emails/")) {
           for ((i, v) in headers.vals()) {
-            if (i == "Authorization" and v == "Keeda@kompete") {
-              return {
-                body = Text.encodeUtf8("caller not authorized!");
-                headers = [];
-                status_code = 404;
-              };
-            } else {
+            if (i == "Authorization" and v == Constants.auth_header) {} else {
               return {
                 body = Text.encodeUtf8("caller not authorized!");
                 headers = [];
