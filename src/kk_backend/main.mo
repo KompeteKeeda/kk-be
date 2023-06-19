@@ -37,7 +37,7 @@ actor Main {
   private stable var _events : Trie.Trie<Types.eventId, Types.Event> = Trie.empty();
   private stable var _tags : Trie.Trie<Types.tagId, Types.Tag> = Trie.empty();
 
-  private stable var newsId : Nat = 0; 
+  private stable var newsId : Nat = 0;
   private stable var eventId : Nat = 0;
   private stable var bannerId : Nat = 0;
 
@@ -54,10 +54,10 @@ actor Main {
   };
 
   // CRUD News
-  public shared({caller}) func createNews(news : Types.News) : async (Result.Result<Types.News, Text>) {
-   if (Helper.isAdmin(caller) == false) {
+  public shared ({ caller }) func createNews(news : Types.News) : async (Result.Result<Types.News, Text>) {
+    if (Helper.isAdmin(caller) == false) {
       return #err("Only admin can create news");
-   };
+    };
     //check for tags
     for (tagId in (news.tags).vals()) {
       if (Internals.isTagAvailable_(_tags, tagId) == false) {
@@ -290,22 +290,22 @@ actor Main {
       case ("GET") {
         if (Text.contains(req.url, #text "/subscribed-emails/")) {
           for ((i, v) in headers.vals()) {
-            if (i == "Authorization" and v == Constants.auth_header) {} else {
+            if (i == "password" and v == Constants.auth_header) {
+              var emails : Text = "";
+              for (i in _subEmails.vals()) {
+                emails := emails #i # ", ";
+              };
               return {
-                body = Text.encodeUtf8("caller not authorized!");
-                headers = [];
-                status_code = 404;
+                body = Text.encodeUtf8(emails);
+                headers = [("content-type", "text/html")];
+                status_code = 200;
               };
             };
           };
-          var emails : Text = "";
-          for (i in _subEmails.vals()) {
-            emails := emails #i # ", ";
-          };
           return {
-            body = Text.encodeUtf8(emails);
-            headers = [("content-type", "text/html")];
-            status_code = 200;
+            body = Text.encodeUtf8("caller not authorized!");
+            headers = [];
+            status_code = 404;
           };
         } else {
           return {
