@@ -41,15 +41,27 @@ actor Main {
   private stable var eventId : Nat = 0;
   private stable var bannerId : Nat = 0;
 
+  private var _subEmails : Buffer.Buffer<Text> = Buffer.Buffer<Text>(0);
+  private stable var _stableSubEmails : [Text] = [];
+
+  // pre/post upgrade
+  system func preupgrade() {
+    _stableSubEmails := Buffer.toArray(_subEmails);
+  };
+  system func postupgrade() {
+    _subEmails := Buffer.fromArray(_stableSubEmails);
+    _stableSubEmails := [];
+  };
+
   // CRUD News
   public shared({caller}) func createNews(news : Types.News) : async (Result.Result<Types.News, Text>) {
    if (Helper.isAdmin(caller) == false) {
       return #err("Only admin can create news");
    };
     //check for tags
-    for(tagId in (news.tags).vals()) {
-      if(Internals.isTagAvailable_(_tags, tagId) == false){
-        return #err(tagId #" tag id not found");
+    for (tagId in (news.tags).vals()) {
+      if (Internals.isTagAvailable_(_tags, tagId) == false) {
+        return #err(tagId # " tag id not found");
       };
     };
     let id = Nat.toText(newsId);
@@ -90,8 +102,8 @@ actor Main {
     var start : Nat = offset;
     var end : Nat = offset + limit;
     let size : Nat = Trie.size(_news);
-    if(size < end){
-        end := size;
+    if (size < end) {
+      end := size;
     };
     let news_arr : [Types.News] = Buffer.toArray(b);
     b := Buffer.Buffer<Types.News>(0);
@@ -144,8 +156,8 @@ actor Main {
     var start : Nat = offset;
     var end : Nat = offset + limit;
     let size : Nat = Trie.size(_banners);
-    if(size < end){
-        end := size;
+    if (size < end) {
+      end := size;
     };
     let banners_arr : [Types.Banner] = Buffer.toArray(b);
     b := Buffer.Buffer<Types.Banner>(0);
@@ -228,11 +240,11 @@ actor Main {
   public query func readAllTagNews(tagId : Types.tagId, offset : Nat, limit : Nat) : async ([Types.News]) {
     var b : Buffer.Buffer<Types.News> = Buffer.Buffer<Types.News>(0);
     switch (Trie.find(_tags, Helper.keyT(tagId), Text.equal)) {
-      case (?n){
+      case (?n) {
         var all_news_ids : [Types.newsId] = n.news;
-        for(i in all_news_ids.vals()) {
+        for (i in all_news_ids.vals()) {
           switch (Trie.find(_news, Helper.keyT(i), Text.equal)) {
-            case (?news){
+            case (?news) {
               b.add(news);
             };
             case _ {};
@@ -246,56 +258,62 @@ actor Main {
     var start : Nat = offset;
     var end : Nat = offset + limit;
     let size : Nat = b.size();
-    if(size < end){
-        end := size;
+    if (size < end) {
+      end := size;
     };
     let news_arr : [Types.News] = Buffer.toArray(b);
     b := Buffer.Buffer<Types.News>(0);
-    while(start < end) {
-        b.add(news_arr[start]);
-        start := start + 1;
+    while (start < end) {
+      b.add(news_arr[start]);
+      start := start + 1;
     };
     return Buffer.toArray(b);
   };
 
   public query func readAllTags() : async ([Types.tagId]) {
     var b : Buffer.Buffer<Types.tagId> = Buffer.Buffer<Types.tagId>(0);
-    for((i, v) in Trie.iter(_tags)) {
+    for ((i, v) in Trie.iter(_tags)) {
       b.add(i);
     };
     return Buffer.toArray(b);
   };
- 
+
+  public shared ({ caller }) func createSubEmail(_email : Text) : async () {
+    _subEmails.add(_email);
+  };
+
   // HTTP request handler
-  // TODO:
   public query func http_request(req : Types.HttpRequest) : async (Types.HttpResponse) {
     let path = Iter.toArray(Text.tokens(req.url, #text("/")));
+    var headers : [(Text, Text)] = req.headers;
     switch (req.method) {
       case ("GET") {
-        if (Text.contains(req.url, #text "/news/")) {
-          switch (Trie.find(_news, Helper.keyT(path[1]), Text.equal)) {
-            case (?news) {
+        if (Text.contains(req.url, #text "/subscribed-emails/")) {
+          for ((i, v) in headers.vals()) {
+            if (i == "Authorization" and v == Constants.auth_header) {} else {
               return {
-                body = Text.encodeUtf8("news exist");
-                headers = [("content-type", "text/html")];
-                status_code = 200;
-              };
-            };
-            case _ {
-              return {
-                body = Text.encodeUtf8("news not found");
-                headers = [("content-type", "text/html")];
+                body = Text.encodeUtf8("caller not authorized!");
+                headers = [];
                 status_code = 404;
               };
             };
           };
+          var emails : Text = "";
+          for (i in _subEmails.vals()) {
+            emails := emails #i # ", ";
+          };
+          return {
+            body = Text.encodeUtf8(emails);
+            headers = [("content-type", "text/html")];
+            status_code = 200;
+          };
         } else {
           return {
-            body = Text.encodeUtf8("need to handle other routed here");
+            body = Text.encodeUtf8("Yay KompeteKeeda!");
             headers = [];
-            status_code = 404;
+            status_code = 200;
           };
-        } //From here we will define different endpoints and handle them accord under else-conditions
+        };
       };
       case _ {
         return {
