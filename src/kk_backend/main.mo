@@ -298,6 +298,25 @@ actor Main {
       };
     };
   };
+  public query func readAllUsers(offset : Nat, limit : Nat) : async ([Types.User]) {
+    var bufferUsers : Buffer.Buffer<Types.User> = Buffer.Buffer<Types.User>(0);
+    for ((ind, user) in Trie.iter(_users)) {
+      bufferUsers.add(user);
+    };
+    var start : Nat = offset;
+    var end : Nat = offset + limit;
+    let size : Nat = Trie.size(_users);
+    if (size < end) {
+      end := size;
+    };
+    let users_arr : [Types.User] = Buffer.toArray(bufferUsers);
+    bufferUsers := Buffer.Buffer<Types.User>(0);
+    while (start < end) {
+      bufferUsers.add(users_arr[start]);
+      start := start + 1;
+    };
+    return Buffer.toArray(bufferUsers);
+  };
   public query func readUser(id : Types.userId) : async (Result.Result<Types.User, Text>) {
     switch (Trie.find(_users, Helper.keyT(id), Text.equal)) {
       case (?u) {
