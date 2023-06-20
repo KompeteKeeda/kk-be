@@ -77,7 +77,6 @@ module {
     };
 
     public type MetaNews = {
-        id : Text;
         title : Text;
         content : Text;
         tags : [tagId];
