@@ -54,7 +54,29 @@ module {
         endDate : ?Int;
     };
 
+    public type MetaEvent = {
+        title : Text;
+        description : Text;
+        host : Text;
+        venue : Text;
+        prizePool : Int;
+        timestamp : Int;
+        coverUrl : Text;
+        endDate : ?Int;
+    };
+
     public type News = {
+        id : Text;
+        title : Text;
+        content : Text;
+        tags : [tagId];
+        coverUrl : Text;
+        userId : userId;
+        viewCount : Int;
+        endDate : ?Int;
+    };
+
+    public type MetaNews = {
         id : Text;
         title : Text;
         content : Text;
@@ -72,8 +94,18 @@ module {
         endDate : Text;
     };
 
+    public type MetaBanner = {
+        url : Text;
+        redirectUrl : Text;
+        endDate : Text;
+    };
+
     public type Tag = {
         id : Text;
+        news : [newsId];
+    };
+
+    public type MetaTag = {
         news : [newsId];
     };
 

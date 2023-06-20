@@ -54,28 +54,48 @@ actor Main {
   };
 
   // CRUD News
-  public shared ({ caller }) func createNews(news : Types.News) : async (Result.Result<Types.News, Text>) {
+  public shared ({ caller }) func createNews(meta_news : Types.MetaNews) : async (Result.Result<Types.News, Text>) {
     if (Helper.isAdmin(caller) == false) {
       return #err("Only admin can create news");
     };
     //check for tags
-    for (tagId in (news.tags).vals()) {
+    for (tagId in (meta_news.tags).vals()) {
       if (Internals.isTagAvailable_(_tags, tagId) == false) {
         return #err(tagId # " tag id not found");
       };
     };
     let id = Nat.toText(newsId);
+    let news : Types.News = {
+      id = id;
+      title = meta_news.title;
+      content = meta_news.content;
+      tags = meta_news.tags;
+      coverUrl = meta_news.coverUrl;
+      userId = meta_news.userId;
+      viewCount = meta_news.viewCount;
+      endDate = meta_news.endDate;
+    };
     _news := Trie.put(_news, Helper.keyT(id), Text.equal, news).0;
     _tags := Internals.addNewsIdToTags_(_tags, news.tags, id);
     newsId := newsId + 1;
     return #ok(news);
   };
-  public shared ({ caller }) func updateNews(id : Types.newsId, news : Types.News) : async (Result.Result<Types.News, Text>) {
+  public shared ({ caller }) func updateNews(id : Types.newsId, meta_news : Types.MetaNews) : async (Result.Result<Types.News, Text>) {
     if (Helper.isAdmin(caller) == false) {
       return #err("Only admin can update news");
     };
     switch (Trie.find(_news, Helper.keyT(id), Text.equal)) {
       case (?n) {
+        let news : Types.News = {
+          id = id;
+          title = meta_news.title;
+          content = meta_news.content;
+          tags = meta_news.tags;
+          coverUrl = meta_news.coverUrl;
+          userId = meta_news.userId;
+          viewCount = meta_news.viewCount;
+          endDate = meta_news.endDate;
+        };
         _news := Trie.put(_news, Helper.keyT(id), Text.equal, news).0;
         return #ok(news);
       };
@@ -115,21 +135,33 @@ actor Main {
   };
 
   // CRUD Banners
-  public shared ({ caller }) func createBanner(banner : Types.Banner) : async (Result.Result<Types.Banner, Text>) {
+  public shared ({ caller }) func createBanner(meta_banner : Types.Banner) : async (Result.Result<Types.Banner, Text>) {
     if (Helper.isAdmin(caller) == false) {
       return #err("Only admin can create banner");
     };
     let id : Text = Nat.toText(bannerId);
+    let banner : Types.Banner = {
+      id = id;
+      url = meta_banner.url;
+      redirectUrl = meta_banner.redirectUrl;
+      endDate = meta_banner.endDate;
+    };
     _banners := Trie.put(_banners, Helper.keyT(id), Text.equal, banner).0;
     bannerId := bannerId + 1;
     return #ok(banner);
   };
-  public shared ({ caller }) func updateBanner(id : Types.bannerId, banner : Types.Banner) : async (Result.Result<Types.Banner, Text>) {
+  public shared ({ caller }) func updateBanner(id : Types.bannerId, meta_banner : Types.Banner) : async (Result.Result<Types.Banner, Text>) {
     if (Helper.isAdmin(caller) == false) {
       return #err("Only admin can update banner");
     };
     switch (Trie.find(_banners, Helper.keyT(id), Text.equal)) {
       case (?b) {
+        let banner : Types.Banner = {
+          id = id;
+          url = meta_banner.url;
+          redirectUrl = meta_banner.redirectUrl;
+          endDate = meta_banner.endDate;
+        };
         _banners := Trie.put(_banners, Helper.keyT(id), Text.equal, banner).0;
         return #ok(banner);
       };
@@ -169,21 +201,43 @@ actor Main {
   };
 
   // CRUD Events
-  public shared ({ caller }) func createEvent(event : Types.Event) : async (Result.Result<Types.Event, Text>) {
+  public shared ({ caller }) func createEvent(meta_event : Types.MetaEvent) : async (Result.Result<Types.Event, Text>) {
     if (Helper.isAdmin(caller) == false) {
       return #err("Only admin can create event");
     };
     let id : Text = Nat.toText(eventId);
+    let event : Types.Event = {
+      id = id;
+      title = meta_event.title;
+      description = meta_event.description;
+      host = meta_event.host;
+      venue = meta_event.venue;
+      prizePool = meta_event.prizePool;
+      timestamp = meta_event.timestamp;
+      coverUrl = meta_event.coverUrl;
+      endDate = meta_event.endDate;
+    };
     _events := Trie.put(_events, Helper.keyT(id), Text.equal, event).0;
     eventId := eventId + 1;
     return #ok(event);
   };
-  public shared ({ caller }) func updateEvent(id : Types.eventId, event : Types.Event) : async (Result.Result<Types.Event, Text>) {
+  public shared ({ caller }) func updateEvent(id : Types.eventId, meta_event : Types.Event) : async (Result.Result<Types.Event, Text>) {
     if (Helper.isAdmin(caller) == false) {
       return #err("Only admin can update event");
     };
     switch (Trie.find(_events, Helper.keyT(id), Text.equal)) {
       case (?e) {
+        let event : Types.Event = {
+          id = id;
+          title = meta_event.title;
+          description = meta_event.description;
+          host = meta_event.host;
+          venue = meta_event.venue;
+          prizePool = meta_event.prizePool;
+          timestamp = meta_event.timestamp;
+          coverUrl = meta_event.coverUrl;
+          endDate = meta_event.endDate;
+        };
         _events := Trie.put(_events, Helper.keyT(id), Text.equal, event).0;
         return #ok(event);
       };
@@ -194,24 +248,24 @@ actor Main {
   };
   public query func readAllEvents(offset : Nat, limit : Nat) : async ([Types.Event]) {
     var bufferEvents : Buffer.Buffer<Types.Event> = Buffer.Buffer<Types.Event>(0);
-    for((ind, event) in Trie.iter(_events)) {
-        bufferEvents.add(event);
+    for ((ind, event) in Trie.iter(_events)) {
+      bufferEvents.add(event);
     };
     var start : Nat = offset;
     var end : Nat = offset + limit;
     let size : Nat = Trie.size(_events);
-    if(size < end){
-        end := size;
+    if (size < end) {
+      end := size;
     };
     let events_arr : [Types.Event] = Buffer.toArray(bufferEvents);
     bufferEvents := Buffer.Buffer<Types.Event>(0);
-    while(start < end) {
-        bufferEvents.add(events_arr[start]);
-        start := start + 1;
+    while (start < end) {
+      bufferEvents.add(events_arr[start]);
+      start := start + 1;
     };
     return Buffer.toArray(bufferEvents);
   };
-  public query func readEvent(id : Types.eventId) : async (Result.Result<Types.Event, Text>) { 
+  public query func readEvent(id : Types.eventId) : async (Result.Result<Types.Event, Text>) {
     switch (Trie.find(_events, Helper.keyT(id), Text.equal)) {
       case (?e) {
         return #ok(e);
