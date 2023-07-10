@@ -52,6 +52,7 @@ module {
         timestamp : Int;
         coverUrl : Text;
         endDate : ?Int;
+        totalCount: Int;
     };
 
     public type MetaEvent = {
@@ -74,6 +75,7 @@ module {
         userId : userId;
         viewCount : Int;
         endDate : ?Int;
+        totalCount: Int;
     };
 
     public type MetaNews = {

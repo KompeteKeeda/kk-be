@@ -74,6 +74,7 @@ actor Main {
       userId = meta_news.userId;
       viewCount = meta_news.viewCount;
       endDate = meta_news.endDate;
+      totalCount = Trie.size(_news);
     };
     _news := Trie.put(_news, Helper.keyT(id), Text.equal, news).0;
     _tags := Internals.addNewsIdToTags_(_tags, news.tags, id);
@@ -95,6 +96,7 @@ actor Main {
           userId = meta_news.userId;
           viewCount = meta_news.viewCount;
           endDate = meta_news.endDate;
+          totalCount = Trie.size(_news);
         };
         _news := Trie.put(_news, Helper.keyT(id), Text.equal, news).0;
         return #ok(news);
@@ -117,7 +119,18 @@ actor Main {
   public query func readAllNews(offset : Nat, limit : Nat) : async ([Types.News]) {
     var b : Buffer.Buffer<Types.News> = Buffer.Buffer<Types.News>(0);
     for ((ind, news) in Trie.iter(_news)) {
-      b.add(news);
+      let news_obj : Types.News = {
+          id = news.id;
+          title = news.title;
+          content = news.content;
+          tags = news.tags;
+          coverUrl = news.coverUrl;
+          userId = news.userId;
+          viewCount = news.viewCount;
+          endDate = news.endDate;
+          totalCount = Trie.size(_news);
+        };
+      b.add(news_obj);
     };
     var start : Nat = offset;
     var end : Nat = offset + limit;
@@ -216,6 +229,7 @@ actor Main {
       timestamp = meta_event.timestamp;
       coverUrl = meta_event.coverUrl;
       endDate = meta_event.endDate;
+      totalCount = Trie.size(_events);
     };
     _events := Trie.put(_events, Helper.keyT(id), Text.equal, event).0;
     eventId := eventId + 1;
@@ -237,6 +251,7 @@ actor Main {
           timestamp = meta_event.timestamp;
           coverUrl = meta_event.coverUrl;
           endDate = meta_event.endDate;
+          totalCount = Trie.size(_events);
         };
         _events := Trie.put(_events, Helper.keyT(id), Text.equal, event).0;
         return #ok(event);
@@ -249,7 +264,19 @@ actor Main {
   public query func readAllEvents(offset : Nat, limit : Nat) : async ([Types.Event]) {
     var bufferEvents : Buffer.Buffer<Types.Event> = Buffer.Buffer<Types.Event>(0);
     for ((ind, event) in Trie.iter(_events)) {
-      bufferEvents.add(event);
+      let event_obj : Types.Event = {
+          id = event.id;
+          title = event.title;
+          description = event.description;
+          host = event.host;
+          venue = event.venue;
+          prizePool = event.prizePool;
+          timestamp = event.timestamp;
+          coverUrl = event.coverUrl;
+          endDate = event.endDate;
+          totalCount = Trie.size(_events);
+        };
+      bufferEvents.add(event_obj);
     };
     var start : Nat = offset;
     var end : Nat = offset + limit;
